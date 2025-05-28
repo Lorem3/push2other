@@ -6,13 +6,14 @@ author: 'Your Name or Org'
 inputs:
   target-url:
     description: 'Git target repo SSH URL (e.g. git@host:user/repo.git)'
-    required: true
+    required: false
     type: string
   private-key:
     description: |
       Private SSH key (PEM format) for authentication.
       ⚠️ 请通过 GitHub Secrets 传入，不要明文写在 workflow 文件或仓库代码里。
-    required: true
+      不设置，会自动跳过步骤
+    required: false
     type: string
 
 # 这里使用 composite steps，全部用 shell 脚本实现
@@ -21,6 +22,7 @@ runs:
   steps:
     - name: Setup SSH key and known_hosts
       shell: bash
+      if: ${{ inputs.private-key != '' && inputs.private-key != null }}
       run: |
         mkdir -p ~/.ssh
         # 写入私钥
@@ -33,6 +35,7 @@ runs:
         ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts
 
     - name: Push repository to target
+      if: ${{ inputs.private-key != '' && inputs.private-key != null }}
       shell: bash
       run: |
         git remote add mirror "${{ inputs.target-url }}"

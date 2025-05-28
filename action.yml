@@ -48,4 +48,4 @@ runs:
         fi
         
         # 使用 --mirror 同步所有 refs（分支、tag 等）
-        git push --mirror mirror
+        git push --mirror mirror --quiet

@@ -1,0 +1,40 @@
+name: 'Push to SSH Repo'
+description: 'Push current repo to another Git repo via SSH using provided private key'
+author: 'Your Name or Org'
+
+# 定义输入参数
+inputs:
+  target-url:
+    description: 'Git target repo SSH URL (e.g. git@host:user/repo.git)'
+    required: true
+    type: string
+  private-key:
+    description: |
+      Private SSH key (PEM format) for authentication.
+      ⚠️ 请通过 GitHub Secrets 传入，不要明文写在 workflow 文件或仓库代码里。
+    required: true
+    type: string
+
+# 这里使用 composite steps，全部用 shell 脚本实现
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup SSH key and known_hosts
+      shell: bash
+      run: |
+        mkdir -p ~/.ssh
+        # 写入私钥
+        echo "${{ inputs.private-key }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+
+        # 提取 host 域名，用于 ssh-keyscan，避免首次连接提示确认
+        HOST=$(echo "${{ inputs.target-url }}" | sed -E 's#.*@([^:/]+).*#\1#')
+        echo "Scanning SSH host key for $HOST"
+        ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts
+
+    - name: Push repository to target
+      shell: bash
+      run: |
+        git remote add mirror "${{ inputs.target-url }}"
+        # 使用 --mirror 同步所有 refs（分支、tag 等）
+        git push --mirror mirror

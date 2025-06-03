@@ -50,5 +50,5 @@ runs:
         # 使用 --mirror 同步所有 refs（分支、tag 等）
         # git push --mirror mirror --quiet
 
-        git push mirror --all --quiet
-        git push mirror --tags --quiet
+        git push mirror --all --quiet || echo "ERR"
+        git push mirror --tags --quiet || echo "ERR"
